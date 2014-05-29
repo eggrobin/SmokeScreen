@@ -53,23 +53,32 @@ class PersistentEmitterManager : MonoBehaviour
         persistentEmitters = new List<PersistentKSPParticleEmitter>();
     }
 
-
     void FixedUpdate()
     {
-        List<PersistentKSPParticleEmitter> persistentEmittersCopy = new List<PersistentKSPParticleEmitter>(persistentEmitters);
-        for (int i = 0; i < persistentEmittersCopy.Count; i++)
+        var persistentEmittersCopy = persistentEmitters.ToArray();
+        for (int i = 0; i < persistentEmittersCopy.Length; i++)
         {
-            if (persistentEmittersCopy[i].go.transform.parent == null && persistentEmittersCopy[i].pe.pe.particles.Count() == 0)
+            if (persistentEmittersCopy[i].timer > 0 && persistentEmittersCopy[i].timer < Time.fixedTime)
             {
-                EffectBehaviour.RemoveParticleEmitter(persistentEmittersCopy[i].pe);
-                persistentEmitters.Remove(persistentEmittersCopy[i]);
-                Destroy(persistentEmittersCopy[i].go);
+                persistentEmittersCopy[i].EmissionStop();
+            }
+
+            if (persistentEmittersCopy[i].go == null  || persistentEmittersCopy[i].go.transform.parent == null)
+            {
+                persistentEmittersCopy[i].EmitterOnUpdate(Vector3.zero);
+
+                if (persistentEmittersCopy[i].pe.pe.particles.Count() == 0)
+                {
+                    EffectBehaviour.RemoveParticleEmitter(persistentEmittersCopy[i].pe);
+                    persistentEmitters.Remove(persistentEmittersCopy[i]);
+                    if (persistentEmittersCopy[i].go != null)
+                        Destroy(persistentEmittersCopy[i].go);
+                }
             }
         }
-
     }
 
-    private void print(String s)
+    private void Print(string s)
     {
         MonoBehaviour.print(this.GetType().Name + " : " + s);
     }
